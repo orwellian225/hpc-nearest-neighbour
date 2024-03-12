@@ -8,7 +8,7 @@
 
 int main(int argc, char **argv) {
     size_t dimension = 5; // Dimensionality of data points
-    size_t num_data_points = 100; // Number of data points
+    size_t num_data_points = 10; // Number of data points
     size_t num_neighbourhoods = 4; // Number of neighbourhoods
 
     std::vector<std::tuple<size_t, size_t, size_t>> presets;
@@ -35,5 +35,18 @@ int main(int argc, char **argv) {
 
     printf("Problem: \n\tDimension (d) = %zu\n\tNumber of Data points (m) = %zu\n\tNumber of neighbourhoods (n) = %zu\n", dimension, num_data_points, num_neighbourhoods);
 
+    // Problem Generation
+    printf("------------------------------------------------------------\n");
+    printf("Problem Data:\n");
+    VecN **data = new VecN*[num_data_points];
+    for (size_t i = 0; i < num_data_points; ++i) {
+        data[i] = new VecN(dimension, 0.);
+        printf("%zu: ", i);
+        data[i]->randomize();
+        data[i]->print();
+    }
+    printf("------------------------------------------------------------\n");
+
+    delete[] data;
     return 0;
 }

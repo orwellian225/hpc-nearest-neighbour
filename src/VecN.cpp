@@ -7,6 +7,11 @@
 #include <stdio.h>
 #include <math.h>
 
+VecN::VecN() {
+    dimension = 0;
+    data = nullptr;
+}
+
 VecN::VecN(size_t n, float initial_value) {
     data = new float[n];
     dimension = n;
@@ -82,6 +87,6 @@ float VecN::norm2(const VecN& other) {
 void VecN::print() {
     printf("[ ");
     for (size_t i = 0; i < this->dimension; ++i)
-        printf("%f ", data[i]);
+        printf("%f ", (*this)[i]);
     printf("]\n");
 }

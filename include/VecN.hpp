@@ -6,6 +6,7 @@ struct VecN {
     size_t dimension;
     float *data;
 
+    VecN();
     VecN(size_t n, float initial_value);
     ~VecN();
 
