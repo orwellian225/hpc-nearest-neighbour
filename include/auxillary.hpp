@@ -1,9 +1,19 @@
 #pragma once
 
-#include <stddef.h>
+#include <vector>
 
-struct DataClass {
-    size_t data_point;
-    size_t data_class;
-    float distance_to_class;
+struct VecNArray {
+    VecN **data;
+    size_t size;
+
+    VecNArray();
+    VecNArray(VecN **data, size_t size);
+    ~VecNArray();
+
+    VecN* operator[](const size_t index);
+};
+
+struct QueryPoints {
+    VecN *query;
+    std::vector<VecN*> points;
 };
