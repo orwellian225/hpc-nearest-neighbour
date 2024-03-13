@@ -30,35 +30,32 @@ std::vector<QueryPoints> serial::nearest_neigbours(VecNArray points, VecNArray q
     return result;
 }
 
-size_t serial::partition(std::vector<std::pair<float, VecN*>> arr, size_t start, size_t end) {
-    std::pair<float, VecN*> *pivot = &arr[start];
+size_t serial::partition(std::vector<std::pair<float, VecN*>> &arr, int64_t start, int64_t end) {
+    std::pair<float, VecN*> pivot = arr[end];
 
-    size_t count = 0;
-    for (size_t i = start + 1; i <= end; ++i) {
-        if (arr[i].first < pivot->first)
-            ++count;
+    size_t temp_pivot = start - 1;
+
+    for (size_t i = start; i < end; ++i) {
+        if (arr[i].first <= pivot.first) {
+            ++temp_pivot;
+
+            std::pair<float, VecN*> temp = arr[temp_pivot];
+            arr[temp_pivot] = arr[i];
+            arr[i] = temp;
+        }
     }
 
-    size_t pivot_i = start + count;
-    std::swap(arr[pivot_i], arr[start]);
+    ++temp_pivot;
 
-    size_t i = start, j = end;
-    while (i < pivot_i && j > pivot_i) {
-        while (arr[i].first <= pivot->first)
-            ++i;
+    std::pair<float, VecN*> temp = arr[temp_pivot];
+    arr[temp_pivot] = arr[end];
+    arr[end] = temp;
 
-        while (arr[j].first > pivot->first)
-            ++j;
-
-        if (i < pivot_i && j > pivot_i)
-            std::swap(arr[i++], arr[j--]);
-    }
-
-    return pivot_i;
+    return temp_pivot;
 }
 
-void serial::quicksort(std::vector<std::pair<float, VecN*>> arr, size_t start, size_t end) {
-    if (start >= end)
+void serial::quicksort(std::vector<std::pair<float, VecN*>> &arr, int64_t start, int64_t end) {
+    if (end <= start)
         return;
 
     size_t pivot_i = serial::partition(arr, start, end);

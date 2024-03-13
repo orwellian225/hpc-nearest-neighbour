@@ -12,10 +12,11 @@ VecNArray::VecNArray(VecN **data, size_t size) {
 }
 
 VecNArray::~VecNArray() {
-    delete[] data;
     size = 0;
 }
 
 VecN* VecNArray::operator[](const size_t index) {
     return data[index];
 }
+
+QueryPoints::~QueryPoints() {}

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <chrono>
 
 #include "VecN.hpp"
 #include "auxillary.hpp"
@@ -35,37 +36,39 @@ int main(int argc, char **argv) {
     }
 
 
-    printf("Problem: \n\tDimension (d) = %zu\n\tNumber of Data points (m) = %zu\n\tNumber of neighbourhoods (n) = %zu\n", dimension, num_points, num_queries);
+    printf("Problem: \n\tDimension (d) = %zu\n\tNumber of Data points (m) = %zu\n\tNumber of queries (n) = %zu\n", dimension, num_points, num_queries);
 
     // Problem Generation
-
-
-    printf("------------------------------------------------------------\n");
-    printf("Problem Points:\n");
+    printf("\t>>> Points: Generating\n");
     VecN **points_data = new VecN*[num_points];
     for (size_t i = 0; i < num_points; ++i) {
         points_data[i] = new VecN(dimension, 0.);
-        printf("\t%zu: ", i);
         points_data[i]->randomize();
-        points_data[i]->print();
     }
+    printf("\t<<< Points: Generated\n");
 
-    printf("Problem Queries:\n");
+    printf("\t>>> Queries: Generating\n");
     VecN **queries_data = new VecN*[num_queries];
     for (size_t i = 0; i < num_queries; ++i) {
         queries_data[i] = new VecN(dimension, 0.);
-        printf("\t%zu: ", i);
         queries_data[i]->randomize();
-        queries_data[i]->print();
     }
+    printf("\t<<< Queries: Generated\n");
     printf("------------------------------------------------------------\n");
-    VecNArray points, queries;
-    points.data = points_data;
-    points.size = num_points;
-    queries.data = queries_data;
-    queries.size = num_queries;
 
-    std::vector<QueryPoints> serial_result = serial::nearest_neigbours(points, queries, 1);
+    VecNArray points(points_data, num_points), queries(queries_data, num_queries);
+
+    printf("Serial:\n");
+    printf("\t>>> Started k Nearest Neighbours @ k = 10\n");
+    auto serial_start = std::chrono::high_resolution_clock::now();
+    std::vector<QueryPoints> serial_result = serial::nearest_neigbours(points, queries, 10);
+    auto serial_end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<float, std::milli> serial_duration = serial_end - serial_start;
+    printf("\t<<< Finished k Nearest Neighbours @ k = 10\n");
+    printf("\t||| execution time: %f ms\n", serial_duration.count());
+    printf("------------------------------------------------------------\n");
+
+    delete[] points_data, queries_data;
 
     return 0;
 }

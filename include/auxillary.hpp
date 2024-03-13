@@ -16,4 +16,6 @@ struct VecNArray {
 struct QueryPoints {
     VecN *query;
     std::vector<VecN*> points;
+
+    ~QueryPoints();
 };
