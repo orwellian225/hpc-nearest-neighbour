@@ -4,10 +4,13 @@
 #include <stdlib.h>
 #include <time.h>
 #include <chrono>
+#include <omp.h>
 
 #include "VecN.hpp"
 #include "auxillary.hpp"
 #include "serial.hpp"
+#include "omp_sections.hpp"
+#include "omp_tasks.hpp"
 
 int main(int argc, char **argv) {
     size_t dimension = 5; // Dimensionality of data points
@@ -36,7 +39,14 @@ int main(int argc, char **argv) {
     }
 
 
-    printf("Problem: \n\tDimension (d) = %zu\n\tNumber of Data points (m) = %zu\n\tNumber of queries (n) = %zu\n", dimension, num_points, num_queries);
+    printf("Problem: \n");
+    printf("\tDimension (d) = %zu\n", dimension);
+    printf("\tNumber of Data points (m) = %zu\n", num_points);
+    printf("\tNumber of queries (n) = %zu\n", num_queries);
+    printf("\tMax number of Threads = %d\n", omp_get_max_threads());
+
+    omp_set_max_active_levels(4);
+    omp_set_dynamic(1);
 
     // Problem Generation
     printf("\t>>> Points: Generating\n");
@@ -67,6 +77,30 @@ int main(int argc, char **argv) {
     printf("\t<<< Finished k Nearest Neighbours @ k = 10\n");
     printf("\t||| execution time: %f ms\n", serial_duration.count());
     printf("------------------------------------------------------------\n");
+
+    printf("OMP Sections:\n");
+    printf("\t>>> Started k Nearest Neighbours @ k = 10\n");
+    auto sections_start = std::chrono::high_resolution_clock::now();
+    std::vector<QueryPoints> section_result = omp_sections::nearest_neigbours(points, queries, 10);
+    auto sections_end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<float, std::milli> section_duration = sections_end - sections_start;
+    printf("\t<<< Finished k Nearest Neighbours @ k = 10\n");
+    printf("\t||| execution time: %f ms\n", section_duration.count());
+    printf("------------------------------------------------------------\n");
+
+    printf("OMP Tasks:\n");
+    printf("\t>>> Started k Nearest Neighbours @ k = 10\n");
+    auto tasks_start = std::chrono::high_resolution_clock::now();
+    std::vector<QueryPoints> tasks_result = omp_tasks::nearest_neigbours(points, queries, 10);
+    auto tasks_end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<float, std::milli> tasks_duration = tasks_end - tasks_start;
+    printf("\t<<< Finished k Nearest Neighbours @ k = 10\n");
+    printf("\t||| execution time: %f ms\n", tasks_duration.count());
+    printf("------------------------------------------------------------\n");
+
+    printf("Speedup: \n");
+    printf("\tSections - %f\n", serial_duration.count() / section_duration.count());
+    printf("\tTasks - %f\n", serial_duration.count() / tasks_duration.count());
 
     delete[] points_data, queries_data;
 
