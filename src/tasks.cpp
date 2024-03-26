@@ -1,6 +1,9 @@
+#include <chrono>
 #include <vector>
 #include <stdint.h>
 #include <algorithm>
+
+#include <omp.h>
 
 #include "tasks.hpp"
 #include "serial.hpp"
@@ -16,10 +19,10 @@ void tasks::determine_queries(std::vector<Query>& queries, std::vector<VecN>& po
         std::vector<QueryDistance> distances;
 
         auto distance_start = std::chrono::high_resolution_clock::now();
-        for (size_t i = 0; i < points.size(); ++i) {
+        for (size_t j = 0; j < points.size(); ++j) {
             QueryDistance new_qd = { 
-                query_point.distance_to(points[i]),
-                &points[i]
+                query_point.distance_to(points[j]),
+                &points[j]
             };
             distances.push_back(new_qd);
         }
@@ -28,7 +31,7 @@ void tasks::determine_queries(std::vector<Query>& queries, std::vector<VecN>& po
 
         auto sort_start = std::chrono::high_resolution_clock::now();
         #pragma omp parallel
-            #pragma omp single task nowait
+        #pragma omp single
             tasks::quicksort(distances, 0, distances.size() - 1, 1000);
         auto sort_end = std::chrono::high_resolution_clock::now();
         breakdown->sort_time_ms += std::chrono::duration_cast<std::chrono::microseconds>(sort_end - sort_start).count() / 1000.;
@@ -51,29 +54,24 @@ void tasks::quicksort(std::vector<QueryDistance>& distances, int32_t low, int32_
         return;
     }
 
-    QueryDistance& pivot = distances[(low + high) / 2];   
-    int32_t i = low, j = high;
-    while (i <= j) {
-        while (distances[i].distance < pivot.distance)
+    QueryDistance& pivot = distances[high];   
+
+    int32_t i = low - 1;
+    for (size_t j = low; j < high; ++j) {
+        if (distances[j].distance <= pivot.distance) {
             ++i;
-
-        while(distances[j].distance > pivot.distance)
-            --j;
-
-        if (i <= j) {
             distances[i].swap(distances[j]);
-            ++i;
-            --j;
         }
     }
 
-    if (low < j) {
-        #pragma omp task shared(distances, low, i)
-        serial::quicksort(distances, low, i - 1);
-    }
+    ++i;
+    distances[i].swap(distances[high]);
 
-    if (i < high) {
-        #pragma omp task shared(distances i, high)
-        serial::quicksort(distances, i + 1, high);
-    }
+    #pragma omp task shared(distances)
+    tasks::quicksort(distances, low, i - 1, limit);
+
+    #pragma omp task shared(distances)
+    tasks::quicksort(distances, i + 1, high, limit);
+
+    #pragma omp taskwait
 }

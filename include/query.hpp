@@ -23,6 +23,10 @@ struct QueryDistance {
         this->distance = temp_distance; 
         this->point->data = temp_data;
     }
+
+    bool operator< (const QueryDistance& other) {
+        return this->distance < other.distance;
+    }
 };
 
 struct Query {

@@ -17,10 +17,10 @@ void serial::determine_queries(std::vector<Query>& queries, std::vector<VecN>& p
         std::vector<QueryDistance> distances;
 
         auto distance_start = std::chrono::high_resolution_clock::now();
-        for (size_t i = 0; i < points.size(); ++i) {
+        for (size_t j = 0; j < points.size(); ++j) {
             QueryDistance new_qd = { 
-                query_point.distance_to(points[i]),
-                &points[i]
+                query_point.distance_to(points[j]),
+                &points[j]
             };
             distances.push_back(new_qd);
         }

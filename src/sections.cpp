@@ -1,6 +1,9 @@
+#include <chrono>
 #include <vector>
 #include <stdint.h>
 #include <algorithm>
+
+#include <omp.h>
 
 #include "sections.hpp"
 #include "serial.hpp"
@@ -10,16 +13,18 @@
 void sections::determine_queries(std::vector<Query>& queries, std::vector<VecN>& points, uint32_t num_points_per_query, Times *breakdown) {
     breakdown->distance_time_ms = 0.;
     breakdown->sort_time_ms = 0.;
+    omp_set_nested(1);
+    omp_set_dynamic(0);
     for (size_t i = 0; i < queries.size(); ++i) {
         const VecN query_point = queries[i].query;
 
         std::vector<QueryDistance> distances;
 
         auto distance_start = std::chrono::high_resolution_clock::now();
-        for (size_t i = 0; i < points.size(); ++i) {
+        for (size_t j = 0; j < points.size(); ++j) {
             QueryDistance new_qd = { 
-                query_point.distance_to(points[i]),
-                &points[i]
+                query_point.distance_to(points[j]),
+                &points[j]
             };
             distances.push_back(new_qd);
         }
@@ -62,12 +67,13 @@ void sections::quicksort(std::vector<QueryDistance>& distances, int32_t low, int
     ++i;
     distances[i].swap(distances[high]);
 
-    #pragma omp parallel sections num_threads(2)
+    #pragma omp parallel num_threads(2)
+    #pragma omp sections 
     {
         #pragma omp section
-        serial::quicksort(distances, low, i - 1);
+        sections::quicksort(distances, low, i - 1, limit);
 
         #pragma omp section
-        serial::quicksort(distances, i + 1, high);
+        sections::quicksort(distances, i + 1, high, limit);
     }
 }
