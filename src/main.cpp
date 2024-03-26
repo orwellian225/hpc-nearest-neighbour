@@ -6,9 +6,11 @@
 #include <vector>
 
 #include "VecN.hpp"
+#include "Times.hpp"
 #include "query.hpp"
 #include "serial.hpp"
 #include "sections.hpp"
+#include "tasks.hpp"
 
 int main(int argc, char **argv) {
 
@@ -25,7 +27,7 @@ int main(int argc, char **argv) {
     uint32_t dimensions = atoi(argv[1]);
     uint32_t num_points = atoi(argv[2]);
     uint32_t num_queries = atoi(argv[3]);
-    constexpr uint32_t num_points_per_queries = 2;
+    constexpr uint32_t num_points_per_queries = 10;
 
     fmt::println("Problem Properties");
     fmt::println("------------------");
@@ -51,27 +53,29 @@ int main(int argc, char **argv) {
         new_query.query = new_query_point;
         queries.push_back(new_query);
     }
-    serial_q = std::vector<Query>(queries);
-    section_q = std::vector<Query>(queries);
-    task_q = std::vector<Query>(queries);
+    serial_q = queries;
+    section_q = queries;
+    task_q = queries;
 
     bool serial_correct = false;
     bool sections_correct = false;
     bool tasks_correct = false;
     float serial_duration_ms = 0.0, sections_duration_ms = 0.0, tasks_duration_ms = 0.0;
 
+    Times serial_breakdown = { 0 }, sections_breakdown = { 0 }, tasks_breakdwon = { 0 };
+
     auto serial_start = std::chrono::high_resolution_clock::now();
-        serial::determine_queries(serial_q, points, num_points_per_queries);
+        serial::determine_queries(serial_q, points, num_points_per_queries, &serial_breakdown);
     auto serial_end = std::chrono::high_resolution_clock::now();
     serial_duration_ms = std::chrono::duration_cast<std::chrono::microseconds>(serial_end - serial_start).count() / 1000.;
 
     auto section_start = std::chrono::high_resolution_clock::now();
-        sections::determine_queries(section_q, points, num_points_per_queries);
+        sections::determine_queries(section_q, points, num_points_per_queries, &sections_breakdown);
     auto sections_end = std::chrono::high_resolution_clock::now();
     sections_duration_ms = std::chrono::duration_cast<std::chrono::microseconds>(sections_end - section_start).count() / 1000.;
 
     auto task_start = std::chrono::high_resolution_clock::now();
-        sections::determine_queries(task_q, points, num_points_per_queries);
+        tasks::determine_queries(task_q, points, num_points_per_queries, &tasks_breakdwon);
     auto task_end = std::chrono::high_resolution_clock::now();
     tasks_duration_ms = std::chrono::duration_cast<std::chrono::microseconds>(task_end - task_start).count() / 1000.;
 
@@ -118,37 +122,45 @@ int main(int argc, char **argv) {
             break;
     }
 
-    fmt::println("{:-<70}", "-");
-    fmt::println("| {:<24} | {:<19} | {:<7} | {:<7} |",
+    fmt::println("{:-<133}", "-");
+    fmt::println("| {:<24} | {:<19} | {:<29} | {:<28} | {:<7} | {:<7} |",
         "Algorithm",
         "Execution Time (ms)",
+        "Distances Execution Time (ms)",
+        "Sorting Exectution Time (ms)",
         "Speedup",
         "Correct"
     );
 
-    fmt::println("{:-<70}", "-");
-    fmt::println("| {:<24} | {:^19.5f} | {:^7} | {:^7} |",
+    fmt::println("{:-<133}", "-");
+    fmt::println("| {:<24} | {:^19.5f} | {:^29.5f} | {:^28.5f} | {:^7} | {:^7} |",
         "Serial",
         serial_duration_ms,
+        serial_breakdown.distance_time_ms,
+        serial_breakdown.sort_time_ms,
         "/",
         serial_correct ? "Yes" : "No"
     );
 
-    fmt::println("| {:<24} | {:^19.5f} | {:^7.5f} | {:^7} |",
+    fmt::println("| {:<24} | {:^19.5f} | {:^29.5f} | {:^28.5f} | {:^7.5f} | {:^7} |",
         "Sections",
         sections_duration_ms,
+        sections_breakdown.distance_time_ms,
+        sections_breakdown.sort_time_ms,
         serial_duration_ms / sections_duration_ms,
         sections_correct ? "Yes" : "No"
     );
 
-    fmt::println("| {:<24} | {:^19.5f} | {:^7.5f} | {:^7} |",
+    fmt::println("| {:<24} | {:^19.5f} | {:^29.5f} | {:^28.5f} | {:^7.5f} | {:^7} |",
         "Tasks",
         tasks_duration_ms,
+        tasks_breakdwon.distance_time_ms,
+        tasks_breakdwon.sort_time_ms,
         serial_duration_ms / tasks_duration_ms,
         tasks_correct ? "Yes" : "No"
     );
 
-    fmt::println("{:-<70}", "-");
+    fmt::println("{:-<133}", "-");
 
     return 0;
 }
