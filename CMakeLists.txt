@@ -1,4 +1,4 @@
-cmake_minimum_rquired(VERSION 3.16)
+cmake_minimum_required(VERSION 3.16)
 
 project(HPC-Nearest-Neighbour DESCRIPTION "COMS4040A HPC Assignment 1: K Nearest Neigbour" LANGUAGES CXX)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -6,7 +6,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_subdirectory(lib/fmt)
 
 add_executable(knn
-    src/main.cpp
+    src/main.cpp src/VecN.cpp
     src/serial.cpp src/tasks.cpp src/sections.cpp
 )
 
